@@ -1,0 +1,145 @@
+= Gem: google-site-search
+
+== Description
+
+This gem was created to aid in the querying and parsing of the {Google Site Search}[http://www.google.com/sitesearch] api. 
+
+In the simplest use case it will query your google site search for a term and supply you with an object containing the results. However I've built this gem with the intention that you will want to explicitly handle _what_ and _how_ the specific results are stored. 
+
+== Installation
+
+Add the following to your projects Gemfile.
+
+	gem 'google-site-search', :git => "[URL]"
+
+Require the code if necessary (_note:_ some frameworks like rails are set to auto-require gems for you by default)
+
+	require 'google-site-search'
+
+== Usage
+
+The simpliest way to use the gem is by providing just a *search* *query* *term* and your *search* *engine* *unique* *id* code (_e.g._ looks like this +00255077836266642015+:+u-scht7a-8i+ and is located in your google site search control panel) 
+
+	#just assign the query to an object
+	search = GoogleSiteSearch.query(GoogleSiteSearch::UrlBuilder.new("microsoft", "00255077836266642015:u-scht7a-8i")
+
+	#object has search attributes like
+	puts search.next_results_url
+	puts search.previous_results_url
+	puts search.xml
+	puts search.spelling
+	puts search.spelling_url
+
+	#object has an array of each specific result that contains title, description and its link by default
+	search.results.each do |result|
+		puts result.title
+		puts result.description
+		puts result.link
+	end
+	
+The _query_ method expects a valid url so if you wanted to supply your own you can! However I have created a builder class to help with proper url creation and to help do some of the work for you.
+
+== Advanced Usage 
+
+An important requirement for this gem was to be able to use {structured data}[https://developers.google.com/custom-search/docs/structured_data] for:
+* querying the search api itself (_i.e._ filtering and sorting )
+* displaying specific information in views (_i.e._ display a specific field like'author', or 'product_type')
+
+Therefore I allow the developer to supply his own "*Results*" class to the query and allow them to parse each result xml element explicitly.
+
+The default Result class is as follows:
+
+	class Result
+		attr_reader :title, :link, :description
+
+		def initialize(node)
+			@title = node.find_first("T").content
+			@link = node.find_first("UE").content
+			@description = node.find_first("S").content
+		end
+	end
+
+As you can see it is very simple. Your class simply needs an initialize method that will recieve an xml node, which it can then do with as it pleases. After it is initialized it is added to the _search.results_ array as shown previously.
+
+See
+* {libxml-ruby}[http://libxml.rubyforge.org/rdoc/] for help on xml parsing.
+* {Googles Site Search XML API reference}[https://developers.google.com/custom-search/docs/xml_results?hl=en] for the <R> tag which encapsulates the details of an individual search result.
+
+== Pagination
+
+The google search api actually does the work of pagination for us, supplying the next and previous urls. The urls are relative to \http://www.google.com so I added a _paginate_ method to simplify the call.
+
+	search2 = GoogleSiteSearch.query(GoogleSiteSearch.paginate(search1.next_results_url))
+
+== Pagination Simple Example
+
+This works and is fairly straight forward.
+
+In your controller:
+
+    if params[:move]
+      @search = GoogleSiteSearch.query(GoogleSiteSearch.paginate(params[:move]))
+    else
+      @search = GoogleSiteSearch.query(GoogleSiteSearch::UrlBuilder.new("microsoft", "00255077836266642015:u-scht7a-8i", :num => 5))
+    end
+
+In your view:
+
+	<% if @search.previous_results_url %>
+		<%= link_to "Previous", search_url(:move => @search.previous_results_url) %>
+	<% end %>
+	<% if @search.next_results_url %>
+		<%= link_to "More", search_url(:move => @search.next_results_url) %>
+	<% end %>
+
+== Escaping
+
+If you start passing around the url's in parameters you may run into issues if you don't escape/unescape the url. If so try...
+
+View adds escape:
+
+	<%= link_to "Previous", search_url(:move => CGI::escape(@search.previous_results_url)) %>
+
+Controller unescapes:
+
+	@search = GoogleSiteSearch.query(GoogleSiteSearch.paginate(CGI::unescape(params[:move])))
+
+
+
+== Filtering and Sorting
+
+See {Filtering and sorting search results.}[https://developers.google.com/custom-search/docs/structured_search]
+
+=== Filtering
+
+Google expects filtering to be on the "search query" itself. However I feel my end users won't and shouldn't be aware of all the possible filtering options (most of my filtering will be based off of dataobject values I supply myself). So I try and keep the filters and actual "search term" separate. 
+
+From the google reference link above an example filter search query is <b>halloween more:pagemap:document-author:lisamorton</b>
+
+	#using the example above would look like this.
+	search = GoogleSiteSearch.query(GoogleSiteSearch::UrlBuilder.new("halloween", "00255077836266642015:u-scht7a-8i", :filter =>  "more:pagemap:document-author:lisamorton")
+
+=== Separate Search Term From Filters
+
+The full "search query" is returned by google's api and stored in the Search object in a few spots. (i.e <i>@search.search_query</i> method and <i>@search.spelling_q</i>).
+
+To separate the search term from the filter use:
+
+	search_term, filters = GoogleSiteSearch.separate_search_term_from_filters(@search.search_query)
+
+=== Sorting
+
+Sorting would also be done by specifing a *sort* option. 
+
+	search = GoogleSiteSearch.query(GoogleSiteSearch::UrlBuilder.new("halloween", "00255077836266642015:u-scht7a-8i", :filter =>  "more:pagemap:document-author:lisamorton", :sort => "data-sdate")
+	
+== Other Params
+
+Any <b>[param=value]</b> query string additions you want to add can be assigned like the sorting above. For example to limit the search results return, to 5, would look like...
+
+	#get only 5 search results with the filtering and sorting from above still applyed.
+	search = GoogleSiteSearch.query(GoogleSiteSearch::UrlBuilder.new("halloween more:pagemap:document-author:lisamorton", "00255077836266642015:u-scht7a-8i", :sort => "date-sdate", :num => "5" )
+
+== Author
+
+David Vallance
