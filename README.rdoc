@@ -10,7 +10,7 @@ In the simplest use case it will query your google site search for a term and su
 
 Add the following to your projects Gemfile.
 
-	gem 'google-site-search', :git => "[URL]"
+	gem 'google-site-search', :git => "git@github.com:dvallance/google-site-search.git"
 
 Require the code if necessary (_note:_ some frameworks like rails are set to auto-require gems for you by default)
 
@@ -22,7 +22,7 @@ The simpliest way to use the gem is by providing just a *search* *query* *term* 
 
 	#just assign the query to an object
 	search = GoogleSiteSearch.query(GoogleSiteSearch::UrlBuilder.new("microsoft", "00255077836266642015:u-scht7a-8i")
-
+  
 	#object has search attributes like
 	puts search.next_results_url
 	puts search.previous_results_url

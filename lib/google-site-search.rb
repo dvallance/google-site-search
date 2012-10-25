@@ -25,12 +25,12 @@ module GoogleSiteSearch
 
   class << self
 
-    # expects the url returned by Search next_results_url/previous_results_url
+    # Expects the URL returned by Search#next_results_url or Search#previous_results_url.
     def paginate url
       GOOGLE_SEARCH_URL + url.to_s
     end
 
-    # makes a request to the google search api and populates a _Search_ object with the results. The search object will parse out various 
+    # See Search - This is a convienence method for creating and querying. 
     def query url, result_class = Result
       Search.new(url, result_class).query
     end
@@ -45,7 +45,7 @@ module GoogleSiteSearch
 			searchs
 		end
 
-    # makes a request to the google search api and returns the xml response as a string.
+    # Makes a request to the google search api and returns the xml response as a string.
     def request_xml url
 			response = nil
       begin
@@ -61,11 +61,19 @@ module GoogleSiteSearch
 			response.body if response && response.code == "200"
     end
 
-		# google's api will give back a full query which has the filter options on it. I like to deal with them separately so this method breaks them up.
+    # Google returns a result link as an absolute but you may
+    # want a relative version. 
+    def relative_path path
+      uri = URI.parse(path)
+      uri.relative? ? path : [uri.path,uri.query].compact.join("?")
+    end
+
+		# Google's api will give back a full query which has the filter options on it. I like to deal with them separately so this method breaks them up.
 		def separate_search_term_from_filters(string)
 			match = /\smore:p.*/.match(string)
 			return [string, nil] if match.nil?
 			return [match.pre_match, match[0]] 
 		end
+
   end
 end
