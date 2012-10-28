@@ -53,28 +53,21 @@ module GoogleSiteSearch
       @results || []
     end
 
-
     private
 
     def parse_xml
-      begin
-        doc = ::XML::Parser.string(@xml).parse
-        doc.find("//GSP/RES/R").each do |result_node|
-          @results << result_class.new(result_node)
-          #puts "*** attribute =  #{result_node.find_first("PageMap/DataObject[@type='metatags']/Attribute[@name='title']").attributes[:value] }"
-        end
-
-        spelling_node = doc.find_first("Spelling/Suggestion")
-				@spelling = spelling_node.try(:content) 
-				@spelling_q = spelling_node.try(:attributes).try(:[],:q)
-        @estimated_results_total = doc.find_first("RES/M").try(:content)
-        @next_results_url = doc.find_first("RES/NB/NU").try(:content)
-        @previous_results_url = doc.find_first("RES/NB/PU").try(:content)
-        @search_query = doc.find_first("Q").try(:content)
-
-      rescue => err
-         puts "parse_xml error #{err.message}"
+      doc = ::XML::Parser.string(@xml).parse
+      doc.find("//GSP/RES/R").each do |result_node|
+        @results << result_class.new(result_node)
       end
+
+      spelling_node = doc.find_first("Spelling/Suggestion")
+      @spelling = spelling_node.try(:content) 
+      @spelling_q = spelling_node.try(:attributes).try(:[],:q)
+      @estimated_results_total = doc.find_first("RES/M").try(:content)
+      @next_results_url = doc.find_first("RES/NB/NU").try(:content)
+      @previous_results_url = doc.find_first("RES/NB/PU").try(:content)
+      @search_query = doc.find_first("Q").try(:content)
     end
   end
 end

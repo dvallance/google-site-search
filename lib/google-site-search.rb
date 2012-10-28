@@ -72,7 +72,7 @@ module GoogleSiteSearch
 		def separate_search_term_from_filters(string)
 			match = /\smore:p.*/.match(string)
 			return [string, nil] if match.nil?
-			return [match.pre_match, match[0]] 
+			return [match.pre_match.strip, match[0].strip] 
 		end
 
   end
