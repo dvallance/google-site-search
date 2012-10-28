@@ -47,18 +47,8 @@ module GoogleSiteSearch
 
     # Makes a request to the google search api and returns the xml response as a string.
     def request_xml url
-			response = nil
-      begin
-        ::Timeout::timeout(2) do
-          response = Net::HTTP.get_response(URI.parse(url.to_s))
-        end
-      rescue Errno::ECONNREFUSED => err
-			rescue URI::InvalidURIError => err
-				puts "URI Error [#{url}]"
-      rescue => err
-     	  puts "ERROR #{err.class}"  
-      end
-			response.body if response && response.code == "200"
+      response = Net::HTTP.get_response(URI.parse(url.to_s))
+			response.body if response.is_a?(Net::HTTPSuccess)
     end
 
     # Google returns a result link as an absolute but you may

@@ -58,4 +58,30 @@ describe GoogleSiteSearch do
       GoogleSiteSearch.separate_search_term_from_filters("").must_equal ["", nil]
     end
   end
+
+  describe ".request_xml" do
+
+    it "passes back the body of a successfull HTTP request" do
+      mock = MiniTest::Mock.new.expect(:is_a?, true, [Net::HTTPSuccess])
+        .expect(:body, "my response")
+      Net::HTTP.stub(:get_response, mock) do
+       GoogleSiteSearch.request_xml("/doesnt_matter").must_equal "my response" 
+      end
+    end
+
+    it "returns nil if not a Net::HTTPSuccess" do
+      mock = MiniTest::Mock.new.expect( :is_a?, false, [Net::HTTPSuccess])
+      Net::HTTP.stub(:get_response, mock) do
+       GoogleSiteSearch.request_xml("/doesnt_matter").must_be_nil
+      end
+    end
+
+    it "doesn't catch exceptions if they happen" do
+      mock = -> a {raise StandardError}
+      Net::HTTP.stub(:get_response, mock) do
+       -> {GoogleSiteSearch.request_xml("/doesnt_matter")}.must_raise StandardError 
+      end
+    end
+  end
+
 end
