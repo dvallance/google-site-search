@@ -84,4 +84,38 @@ describe GoogleSiteSearch do
     end
   end
 
+  describe ".query" do
+    it "creates a Search object and calls query on it" do
+      mock = MiniTest::Mock.new.expect(:query, mock)
+      Search.stub(:new, mock) do
+        GoogleSiteSearch.query("/doesnt_matter")
+        mock.verify
+      end
+    end
+  end
+
+  describe ".query_multiple" do
+
+    let :result do
+      mock = MiniTest::Mock.new
+      for i in 1..3
+        mock.expect(:try,true,[Symbol]) unless i == 1
+        mock.expect(:next_results_url, "url") unless i == 1
+        mock.expect(:query, mock)
+      end
+      Search.stub(:new, mock) do
+        GoogleSiteSearch.query_multiple("dosent_matter", Result, 3)
+      end
+    end
+
+    it "returns an array of query results" do
+      result.class.must_equal Array
+    end
+
+    it "performs the correct number of searches" do
+      result.count.must_equal 3
+    end
+
+  end
+
 end

@@ -35,7 +35,7 @@ module GoogleSiteSearch
       Search.new(url, result_class).query
     end
 
-		def query_multiple url, result_class = Result, times
+		def query_multiple url, result_class, times
 			searchs = []
 			while times > 0
 				times -= 1
