@@ -40,7 +40,11 @@ module GoogleSiteSearch
 			while times > 0
 				times -= 1
 				url = paginate(searchs.last.try(:next_results_url)) unless searchs.empty?
-				searchs << Search.new(url, result_class).query
+        search_result = Search.new(url, result_class).query
+				searchs << search_result
+        if block_given?
+          yield( search_result )
+        end
 			end
 			searchs
 		end

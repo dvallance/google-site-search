@@ -94,15 +94,23 @@ describe GoogleSiteSearch do
     end
   end
 
-  describe ".query_multiple" do
 
-    let :result do
+  describe ".query_multiple" do
+    
+    def mock_querys num
       mock = MiniTest::Mock.new
-      for i in 1..3
+      for i in 1..num
+        mock.expect(:index, i)
         mock.expect(:try,true,[Symbol]) unless i == 1
         mock.expect(:next_results_url, "url") unless i == 1
         mock.expect(:query, mock)
       end
+      mock
+    end
+    
+
+    let :result do
+      mock = mock_querys(3)
       Search.stub(:new, mock) do
         GoogleSiteSearch.query_multiple("dosent_matter", Result, 3)
       end
@@ -114,6 +122,18 @@ describe GoogleSiteSearch do
 
     it "performs the correct number of searches" do
       result.count.must_equal 3
+    end
+
+
+    it "accepts and executes a block for each result" do
+      mock = mock_querys(3)
+      Search.stub(:new, mock) do
+        array = []
+        result = GoogleSiteSearch.query_multiple("dosent_matter", Result, 3) do |result|
+          array << result.index
+        end
+        array.must_equal [1,2,3]
+      end
     end
 
   end
