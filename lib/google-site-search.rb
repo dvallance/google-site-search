@@ -15,7 +15,6 @@ require "xml"
 # A module to help query and parse the google site search api.
 #
 module GoogleSiteSearch
-  
 	
   GOOGLE_SEARCH_URL = "http://www.google.com"
   DEFAULT_PARAMS = {
@@ -31,20 +30,22 @@ module GoogleSiteSearch
     end
 
     # See Search - This is a convienence method for creating and querying. 
-    def query url, result_class = Result
-      Search.new(url, result_class).query
+    # This method can except a block which can access the resulting search object.
+    def query url, result_class = Result, &block
+      search_result = Search.new(url, result_class).query
+      yield(search_result) if block_given?
+      search_result
     end
 
-		def query_multiple url, result_class, times
-			searchs = []
-			while times > 0
-				times -= 1
-				url = paginate(searchs.last.try(:next_results_url)) unless searchs.empty?
-        search_result = Search.new(url, result_class).query
-				searchs << search_result
-        if block_given?
-          yield( search_result )
-        end
+    # See Search - This allows you to retrieve up to (times) number of searchs if they
+    # are available (i.e. Stops if a search has no next_results_url).
+    # This method can except a block which can access the resulting search object.
+		def query_multiple times, url, result_class = Result, &block
+			searchs = [query(url, result_class, &block).query]
+			while (times=times-1) > 0
+				next_results_url = searchs.last.try(:next_results_url)
+        break if next_results_url.blank?
+        searchs << search_result = query(url, result_class, &block).query
 			end
 			searchs
 		end

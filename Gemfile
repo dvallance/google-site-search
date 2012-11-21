@@ -7,4 +7,5 @@ group :test do
   gem "minitest"
   gem "guard-minitest"
   gem "rb-inotify"
+  gem "mocha"
 end

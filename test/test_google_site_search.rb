@@ -94,48 +94,64 @@ describe GoogleSiteSearch do
     end
   end
 
-
   describe ".query_multiple" do
-    
-    def mock_querys num
-      mock = MiniTest::Mock.new
-      for i in 1..num
-        mock.expect(:index, i)
-        mock.expect(:try,true,[Symbol]) unless i == 1
-        mock.expect(:next_results_url, "url") unless i == 1
-        mock.expect(:query, mock)
+   
+    describe "when there are always next results available" do
+      before do
+        search = Search.new("fake_url",GoogleSiteSearch::Result)
+        search.stubs(:next_results_url).returns("next_url")
+        Search.any_instance.stubs(:query).returns(search)
       end
-      mock
-    end
-    
 
-    let :result do
-      mock = mock_querys(3)
-      Search.stub(:new, mock) do
-        GoogleSiteSearch.query_multiple("dosent_matter", Result, 3)
+      let :result do
+        GoogleSiteSearch.query_multiple(3, "dosent_matter", Result)
       end
-    end
 
-    it "returns an array of query results" do
-      result.class.must_equal Array
-    end
+      it "returns an array of query results" do
+        result.must_be_instance_of Array 
+      end
 
-    it "performs the correct number of searches" do
-      result.count.must_equal 3
-    end
+      it "performs the correct number of searches" do
+        result.count.must_equal 3
+      end
 
-
-    it "accepts and executes a block for each result" do
-      mock = mock_querys(3)
-      Search.stub(:new, mock) do
-        array = []
-        result = GoogleSiteSearch.query_multiple("dosent_matter", Result, 3) do |result|
-          array << result.index
+      describe "accepts and executes a block for each result" do
+        let :block_result do
+          block_result = []
+          GoogleSiteSearch.query_multiple(3, "dosent_matter", Result) do |search|
+            block_result << search.next_results_url
+          end
+          block_result
         end
-        array.must_equal [1,2,3]
+
+        it "should have the mocked next result value" do
+          block_result.select{|result| result == "next_url"}.count.must_equal 3
+        end
       end
+
     end
 
-  end
+    describe "when there are less results then asked for" do
 
+      before do
+        search = Search.new("fake_url",GoogleSiteSearch::Result)
+        search.stubs(:next_results_url).returns(nil)
+        Search.any_instance.stubs(:query).returns(search)
+      end
+
+      let :result do
+        GoogleSiteSearch.query_multiple(3, "dosent_matter", Result)
+      end
+
+      it "returns an array of query results" do
+        result.must_be_instance_of Array 
+      end
+
+      it "performs only available searchs" do
+        #next_results stubed to nil so should only ever do 1
+        result.count.must_equal 1
+      end
+
+    end
+  end
 end
