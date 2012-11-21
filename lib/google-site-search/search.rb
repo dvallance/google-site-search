@@ -1,5 +1,7 @@
 module GoogleSiteSearch
 
+  class ParsingError < StandardError; end;
+
 	# Search is responsible for parsing the returned xml from
 	# google's API.
 	#
@@ -56,18 +58,22 @@ module GoogleSiteSearch
     private
 
     def parse_xml
-      doc = ::XML::Parser.string(@xml).parse
-      doc.find("//GSP/RES/R").each do |result_node|
-        @results << result_class.new(result_node)
-      end
+      begin
+        doc = ::XML::Parser.string(@xml).parse
+        doc.find("//GSP/RES/R").each do |result_node|
+          @results << result_class.new(result_node)
+        end
 
-      spelling_node = doc.find_first("Spelling/Suggestion")
-      @spelling = spelling_node.try(:content) 
-      @spelling_q = spelling_node.try(:attributes).try(:[],:q)
-      @estimated_results_total = doc.find_first("RES/M").try(:content)
-      @next_results_url = doc.find_first("RES/NB/NU").try(:content)
-      @previous_results_url = doc.find_first("RES/NB/PU").try(:content)
-      @search_query = doc.find_first("Q").try(:content)
+        spelling_node = doc.find_first("Spelling/Suggestion")
+        @spelling = spelling_node.try(:content) 
+        @spelling_q = spelling_node.try(:attributes).try(:[],:q)
+        @estimated_results_total = doc.find_first("RES/M").try(:content)
+        @next_results_url = doc.find_first("RES/NB/NU").try(:content)
+        @previous_results_url = doc.find_first("RES/NB/PU").try(:content)
+        @search_query = doc.find_first("Q").try(:content)
+      rescue Exception => e
+        raise ParsingError, "#{e.message} URL:[#{@url}] XML:[#{@xml}]"
+      end
     end
   end
 end
