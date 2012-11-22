@@ -39,7 +39,7 @@ The simpliest way to use the gem is by providing just a *search* *query* *term* 
 	
 The _query_ method expects a valid url so if you wanted to supply your own you can! However I have created a builder class to help with proper url creation and to help do some of the work for you.
 
-== Multible Search
+== Multiple Search
 
 Since google only allows a max of 20 returned results I have added a method that will capture up to *n* number of results.
 
