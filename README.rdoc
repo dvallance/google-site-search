@@ -45,7 +45,7 @@ Since google only allows a max of 20 returned results I have added a method that
 
     # the array will be up to 5 search objects if the query actually has that many results.
     # has soon as a search doesn't have a next_results_url the method stops.
-    array_of_search_results = GoogleSiteSearch.query_multiple(5, *[url]*)  
+    array_of_search_results = GoogleSiteSearch.query_multiple(5, *YOUR_URL*)  
 
 == Blocks (and a caching example)
 
@@ -55,7 +55,7 @@ Both the query and query_multiple methods can take a block which executes for ea
     url = GoogleSiteSearch::UrlBuilder.new("microsoft", "00255077836266642015:u-scht7a-8i")
     @search = Rails.cache.fetch(url) do |search|
       # I can do something with the search objects.
-      # possibly custom analytics on ours searches?
+      # possibly custom analytics for our searchs?
       search.url # we can access the object
     end
       
