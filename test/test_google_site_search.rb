@@ -12,7 +12,7 @@ describe GoogleSiteSearch do
       "doiwork" #query parameter values sorted and concated.
     end
 
-    it "properly stra" do
+    it "properly creates a key" do
       RSmaz.decompress(GoogleSiteSearch.caching_key(sample_url)).must_equal becomes
     end 
 
