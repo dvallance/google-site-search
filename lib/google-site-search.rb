@@ -6,10 +6,12 @@ require "google-site-search/version"
 require "google-site-search/url_builder"
 require "google-site-search/search"
 require "google-site-search/result"
-require "timeout"
 require "net/http"
+require "rsmaz"
+require "timeout"
 require "uri"
 require "xml"
+require "rack/utils"
 
 ##
 # A module to help query and parse the google site search api.
@@ -23,6 +25,17 @@ module GoogleSiteSearch
   }
 
   class << self
+
+    # Takes a url, strips out un-required query params, and compresses
+    # a string representation. The intent is to have a small string to
+    # use as a caching key. 
+    def caching_key url
+      params = Rack::Utils.parse_query(url)
+      # ei = "Passes on an alphanumeric parameter that decodes the originating SERP where user clicked on a related search". Don't fully understand what it does but it makes my caching less effective.
+      params.delete("ei") 
+      key = params.values.sort.join
+      key.blank? ? nil : RSmaz.compress(key) 
+    end
 
     # Expects the URL returned by Search#next_results_url or Search#previous_results_url.
     def paginate url

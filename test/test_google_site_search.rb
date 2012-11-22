@@ -2,6 +2,22 @@ require_relative 'test_helper'
 
 describe GoogleSiteSearch do
 
+
+  describe '.caching_key' do
+    let :sample_url do 
+      "domain?q=work&ei=dontshow&other=do&more=i"
+    end
+
+    let :becomes do
+      "doiwork" #query parameter values sorted and concated.
+    end
+
+    it "properly stra" do
+      RSmaz.decompress(GoogleSiteSearch.caching_key(sample_url)).must_equal becomes
+    end 
+
+  end
+
   describe '.paginate' do
     it 'completes a valid url for the relative path supplied' do
       GoogleSiteSearch.paginate("/some/path").must_equal "http://www.google.com/some/path"
