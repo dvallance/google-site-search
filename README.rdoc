@@ -10,34 +10,55 @@ In the simplest use case it will query your google site search for a term and su
 
 Add the following to your projects Gemfile.
 
-	gem 'google-site-search', :git => "git@github.com:dvallance/google-site-search.git"
+    gem 'google-site-search', :git => "git@github.com:dvallance/google-site-search.git"
 
 Require the code if necessary (_note:_ some frameworks like rails are set to auto-require gems for you by default)
 
-	require 'google-site-search'
+    require 'google-site-search'
 
 == Usage
 
 The simpliest way to use the gem is by providing just a *search* *query* *term* and your *search* *engine* *unique* *id* code (_e.g._ looks like this +00255077836266642015+:+u-scht7a-8i+ and is located in your google site search control panel) 
 
-	#just assign the query to an object
-	search = GoogleSiteSearch.query(GoogleSiteSearch::UrlBuilder.new("microsoft", "00255077836266642015:u-scht7a-8i")
+    # just assign the query to an object
+    search = GoogleSiteSearch.query(GoogleSiteSearch::UrlBuilder.new("microsoft", "00255077836266642015:u-scht7a-8i")
   
-	#object has search attributes like
-	puts search.next_results_url
-	puts search.previous_results_url
-	puts search.xml
-	puts search.spelling
-	puts search.spelling_url
+    # object has search attributes like
+    puts search.next_results_url
+    puts search.previous_results_url
+    puts search.xml
+    puts search.spelling
+    puts search.spelling_url
 
-	#object has an array of each specific result that contains title, description and its link by default
-	search.results.each do |result|
-		puts result.title
-		puts result.description
-		puts result.link
-	end
+    # object has an array of each specific result that contains title, description and its link by default
+    search.results.each do |result|
+      puts result.title
+      puts result.description
+      puts result.link
+    end
 	
 The _query_ method expects a valid url so if you wanted to supply your own you can! However I have created a builder class to help with proper url creation and to help do some of the work for you.
+
+== Multible Search
+
+Since google only allows a max of 20 returned results I have added a method that will capture up to *n* number of results.
+
+    # the array will be up to 5 search objects if the query actually has that many results.
+    # has soon as a search doesn't have a next_results_url the method stops.
+    array_of_search_results = GoogleSiteSearch.query_multiple(5, *[url]*)  
+
+== Blocks (and a caching example)
+
+Both the query and query_multiple methods can take a block which executes for each Search object found.
+
+    # here is a rails example using the block 
+    url = GoogleSiteSearch::UrlBuilder.new("microsoft", "00255077836266642015:u-scht7a-8i")
+    @search = Rails.cache.fetch(url) do |search|
+      # I can do something with the search objects.
+      # possibly custom analytics on ours searches?
+      search.url # we can access the object
+    end
+      
 
 == Advanced Usage 
 
@@ -49,15 +70,14 @@ Therefore I allow the developer to supply his own "*Results*" class to the query
 
 The default Result class is as follows:
 
-	class Result
-		attr_reader :title, :link, :description
-
-		def initialize(node)
-			@title = node.find_first("T").content
-			@link = node.find_first("UE").content
-			@description = node.find_first("S").content
-		end
-	end
+    class Result
+      attr_reader :title, :link, :description
+        def initialize(node)
+        @title = node.find_first("T").content
+        @link = node.find_first("UE").content
+        @description = node.find_first("S").content
+      end
+    end
 
 As you can see it is very simple. Your class simply needs an initialize method that will recieve an xml node, which it can then do with as it pleases. After it is initialized it is added to the _search.results_ array as shown previously.
 
@@ -69,7 +89,11 @@ See
 
 The google search api actually does the work of pagination for us, supplying the next and previous urls. The urls are relative to \http://www.google.com so I added a _paginate_ method to simplify the call.
 
-	search2 = GoogleSiteSearch.query(GoogleSiteSearch.paginate(search1.next_results_url))
+    search2 = GoogleSiteSearch.query(GoogleSiteSearch.paginate(search1.next_results_url))
+
+== A Note on Security
+
+The next and previous urls will contain your search engine id. Therefore you should encrypt/decrypt as needed. (I'm looking at implementing some thing to handle this for you.)
 
 == Pagination Simple Example
 
@@ -85,12 +109,12 @@ In your controller:
 
 In your view:
 
-	<% if @search.previous_results_url %>
-		<%= link_to "Previous", search_url(:move => @search.previous_results_url) %>
-	<% end %>
-	<% if @search.next_results_url %>
-		<%= link_to "More", search_url(:move => @search.next_results_url) %>
-	<% end %>
+    <% if @search.previous_results_url %>
+      <%= link_to "Previous", search_url(:move => @search.previous_results_url) %>
+    <% end %>
+    <% if @search.next_results_url %>
+      <%= link_to "More", search_url(:move => @search.next_results_url) %>
+    <% end %>
 
 == Escaping
 
@@ -98,13 +122,11 @@ If you start passing around the url's in parameters you may run into issues if y
 
 View adds escape:
 
-	<%= link_to "Previous", search_url(:move => CGI::escape(@search.previous_results_url)) %>
+    <%= link_to "Previous", search_url(:move => CGI::escape(@search.previous_results_url)) %>
 
 Controller unescapes:
 
-	@search = GoogleSiteSearch.query(GoogleSiteSearch.paginate(CGI::unescape(params[:move])))
-
-
+    @search = GoogleSiteSearch.query(GoogleSiteSearch.paginate(CGI::unescape(params[:move])))
 
 == Filtering and Sorting
 
@@ -116,8 +138,8 @@ Google expects filtering to be on the "search query" itself. However I feel my e
 
 From the google reference link above an example filter search query is <b>halloween more:pagemap:document-author:lisamorton</b>
 
-	#using the example above would look like this.
-	search = GoogleSiteSearch.query(GoogleSiteSearch::UrlBuilder.new("halloween", "00255077836266642015:u-scht7a-8i", :filter =>  "more:pagemap:document-author:lisamorton")
+    # using the example above would look like this.
+    search = GoogleSiteSearch.query(GoogleSiteSearch::UrlBuilder.new("halloween", "00255077836266642015:u-scht7a-8i", :filter =>  "more:pagemap:document-author:lisamorton")
 
 === Separate Search Term From Filters
 
@@ -125,20 +147,20 @@ The full "search query" is returned by google's api and stored in the Search obj
 
 To separate the search term from the filter use:
 
-	search_term, filters = GoogleSiteSearch.separate_search_term_from_filters(@search.search_query)
+    search_term, filters = GoogleSiteSearch.separate_search_term_from_filters(@search.search_query)
 
 === Sorting
 
 Sorting would also be done by specifing a *sort* option. 
 
-	search = GoogleSiteSearch.query(GoogleSiteSearch::UrlBuilder.new("halloween", "00255077836266642015:u-scht7a-8i", :filter =>  "more:pagemap:document-author:lisamorton", :sort => "data-sdate")
+    search = GoogleSiteSearch.query(GoogleSiteSearch::UrlBuilder.new("halloween", "00255077836266642015:u-scht7a-8i", :filter =>  "more:pagemap:document-author:lisamorton", :sort => "data-sdate")
 	
 == Other Params
 
 Any <b>[param=value]</b> query string additions you want to add can be assigned like the sorting above. For example to limit the search results return, to 5, would look like...
 
-	#get only 5 search results with the filtering and sorting from above still applyed.
-	search = GoogleSiteSearch.query(GoogleSiteSearch::UrlBuilder.new("halloween more:pagemap:document-author:lisamorton", "00255077836266642015:u-scht7a-8i", :sort => "date-sdate", :num => "5" )
+    # get only 5 search results with the filtering and sorting from above still applyed.
+    search = GoogleSiteSearch.query(GoogleSiteSearch::UrlBuilder.new("halloween more:pagemap:document-author:lisamorton", "00255077836266642015:u-scht7a-8i", :sort => "date-sdate", :num => "5" )
 
 == Author
 
