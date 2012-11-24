@@ -5,16 +5,20 @@ describe GoogleSiteSearch do
 
   describe '.caching_key' do
     let :sample_url do 
-      "domain?q=work&ei=dontshow&other=do&more=i"
+      "http://domain?q=work&ei=dontshow&do=i"
     end
 
     let :becomes do
-      "doiwork" #query parameter values sorted and concated.
+      "doiqwork" #query parameter values sorted and concated.
     end
 
     it "properly creates a key" do
       RSmaz.decompress(GoogleSiteSearch.caching_key(sample_url)).must_equal becomes
     end 
+  
+    it "raises error on bad uri" do
+      -> {GoogleSiteSearch.caching_key(nil)}.must_raise URI::InvalidURIError
+    end
 
   end
 

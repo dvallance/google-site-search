@@ -30,10 +30,10 @@ module GoogleSiteSearch
     # a string representation. The intent is to have a small string to
     # use as a caching key. 
     def caching_key url
-      params = Rack::Utils.parse_query(url)
+      params = Rack::Utils.parse_query(URI.parse(url).query)
       # ei = "Passes on an alphanumeric parameter that decodes the originating SERP where user clicked on a related search". Don't fully understand what it does but it makes my caching less effective.
       params.delete("ei") 
-      key = params.values.sort.join
+      key = params.map{|k,v| k.to_s + v.to_s}.sort.join
       key.blank? ? nil : RSmaz.compress(key) 
     end
 
