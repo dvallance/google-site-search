@@ -38,8 +38,16 @@ module GoogleSiteSearch
     end
 
     # Expects the URL returned by Search#next_results_url or Search#previous_results_url.
-    def paginate url
-      GOOGLE_SEARCH_URL + url.to_s
+    def paginate url, search_engine_id
+      raise StandardError, "search_engine_id required" if search_engine_id.blank? 
+      uri = URI.parse(url.to_s)
+      raise StandardError, "url seems to be invalid, parameters expected" if uri.query.blank?
+      if uri.relative?
+        uri.host = "www.google.com"
+        uri.scheme = "http"
+      end
+      uri.query = uri.query += "&cx=#{search_engine_id}"
+      uri.to_s
     end
 
     # See Search - This is a convienence method for creating and querying. 

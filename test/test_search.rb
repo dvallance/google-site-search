@@ -27,13 +27,21 @@ describe Search do
     end
 
     it "contains the next results url" do
-      search.next_results_url.must_equal "/next"
+      search.next_results_url.wont_be :empty?
+    end
+
+    it "next results url removed the search engine id parameter" do
+      search.next_results_url.must_equal "/next?q=search&start=1"
     end
 
     it "contains the previous results url" do
-      search.previous_results_url.must_equal "/previous"
+      search.previous_results_url.wont_be :empty?
     end
 
+    it "next results url removed the search engine id parameter" do
+      search.previous_results_url.must_equal "/previous?q=search&start=20"
+    end
+    
     it "stores the original xml" do
       search.xml.must_equal xml
     end
@@ -54,4 +62,5 @@ describe Search do
       search.spelling_q.must_equal "fake suggestion escaped"
     end
   end
+
 end

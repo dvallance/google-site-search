@@ -35,8 +35,8 @@
   <RES SN="3" EN="4">
     <M>29</M>
     <NB>
-      <PU>/previous</PU>
-      <NU>/next</NU>
+      <PU>/previous?start=20&amp;q=search&amp;cx=my_key</PU>
+      <NU>/next?cx=my_key&amp;q=search&amp;start=1</NU>
     </NB>
     <RG START="1" SIZE="2"/>
     <RG START="1" SIZE="1">    </RG>

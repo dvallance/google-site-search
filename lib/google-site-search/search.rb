@@ -44,6 +44,15 @@ module GoogleSiteSearch
       @result_class = result_class
     end
 
+    def next_results_url  
+      @next_results_url
+    end
+
+    def previous_results_url
+      @previous_results_url
+    end
+
+
 		# Query's Google API, stores the xml and parses values into itself.
     def query
       @xml = GoogleSiteSearch::request_xml(url)
@@ -68,12 +77,21 @@ module GoogleSiteSearch
         @spelling = spelling_node.try(:content) 
         @spelling_q = spelling_node.try(:attributes).try(:[],:q)
         @estimated_results_total = doc.find_first("RES/M").try(:content)
-        @next_results_url = doc.find_first("RES/NB/NU").try(:content)
-        @previous_results_url = doc.find_first("RES/NB/PU").try(:content)
+        @next_results_url = remove_search_engine_id(doc.find_first("RES/NB/NU").try(:content))
+        @previous_results_url = remove_search_engine_id(doc.find_first("RES/NB/PU").try(:content))
         @search_query = doc.find_first("Q").try(:content)
       rescue Exception => e
         raise ParsingError, "#{e.message} URL:[#{@url}] XML:[#{@xml}]"
       end
+    end
+
+    def remove_search_engine_id url
+      return nil if url.blank?
+      uri = URI.parse(url)
+      params = Rack::Utils::parse_query(uri.query)
+      params.delete("cx")
+      uri.query = params.map{|k,v| "#{k}=#{v}"}.sort.join("&")
+      uri.to_s
     end
   end
 end

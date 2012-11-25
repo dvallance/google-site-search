@@ -23,9 +23,25 @@ describe GoogleSiteSearch do
   end
 
   describe '.paginate' do
-    it 'completes a valid url for the relative path supplied' do
-      GoogleSiteSearch.paginate("/some/path").must_equal "http://www.google.com/some/path"
+
+    let :valid_url do
+      "http://www.valid.com/search?q=mysearch"
     end
+    
+    it "raises an error if the url has no parameters and is therefore invalid" do
+      url = "http://www.noparameters.com/"
+      -> {GoogleSiteSearch.paginate(url, "my_key")}.must_raise StandardError
+    end
+
+    it "raises an error if a search engine key is nil or blank" do
+      -> {GoogleSiteSearch.paginate(valid_url, "")}.must_raise StandardError 
+      -> {GoogleSiteSearch.paginate(valid_url, nil)}.must_raise StandardError 
+    end
+
+    it 'completes a valid url for the relative path supplied' do
+      GoogleSiteSearch.paginate("/some/path?q=search","my_key").must_equal "http://www.google.com/some/path?q=search&cx=my_key"
+    end
+
   end
 
   describe '.relative_path' do

@@ -87,13 +87,9 @@ See
 
 == Pagination
 
-The google search api actually does the work of pagination for us, supplying the next and previous urls. The urls are relative to \http://www.google.com so I added a _paginate_ method to simplify the call.
+The google search api does the work of pagination for us, supplying the next and previous urls. The urls are relative paths and contain the search engine id parameter. Since this is a security concern I strip out the search engine id when I store them in the Search.next_result_url and Search.previous_result_url methods. This makes them safe to put in links on views and it is why you must supply the search engine id again on the paginate call; so full url can be rebuilt for the query call.
 
-    search2 = GoogleSiteSearch.query(GoogleSiteSearch.paginate(search1.next_results_url))
-
-== A Note on Security
-
-The next and previous urls will contain your search engine id. Therefore you should encrypt/decrypt as needed. (I'm looking at implementing some thing to handle this for you.)
+    search2 = GoogleSiteSearch.query(GoogleSiteSearch.paginate(search1.next_results_url, "00255077836266642015:u-scht7a-8i"))
 
 == Pagination Simple Example
 
@@ -102,7 +98,7 @@ This works and is fairly straight forward.
 In your controller:
 
     if params[:move]
-      @search = GoogleSiteSearch.query(GoogleSiteSearch.paginate(params[:move]))
+      @search = GoogleSiteSearch.query(GoogleSiteSearch.paginate(params[:move], "00255077836266642015:u-scht7a-8i"))
     else
       @search = GoogleSiteSearch.query(GoogleSiteSearch::UrlBuilder.new("microsoft", "00255077836266642015:u-scht7a-8i", :num => 5))
     end
@@ -126,7 +122,7 @@ View adds escape:
 
 Controller unescapes:
 
-    @search = GoogleSiteSearch.query(GoogleSiteSearch.paginate(CGI::unescape(params[:move])))
+    @search = GoogleSiteSearch.query(GoogleSiteSearch.paginate(CGI::unescape(params[:move]), "00255077836266642015:u-scht7a-8i"))
 
 == Filtering and Sorting
 
