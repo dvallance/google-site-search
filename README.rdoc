@@ -47,18 +47,25 @@ Since google only allows a max of 20 returned results I have added a method that
     # has soon as a search doesn't have a next_results_url the method stops.
     array_of_search_results = GoogleSiteSearch.query_multiple(5, *YOUR_URL*)  
 
+== Caching
+
+To aid in caching I added a a *caching_key* method which sorts the query parameters, removes some unique parameters that google adds (i.e. an _ie_ parameter which has something to do with related searchs), and compresses the result. It should be a unique representation of a search url, and used to cache results. 
+
 == Blocks (and a caching example)
 
 Both the query and query_multiple methods can take a block which executes for each Search object found.
 
-    # here is a rails example using the block 
+    # here is a rails example using caching and supplying a block 
     url = GoogleSiteSearch::UrlBuilder.new("microsoft", "00255077836266642015:u-scht7a-8i")
-    @search = Rails.cache.fetch(url) do |search|
-      # I can do something with the search objects.
-      # possibly custom analytics for our searchs?
-      search.url # we can access the object
+
+    @search = Rails.cache.fetch(GoogleSiteSearch::caching_key(url.to_s), :expires => 1.day) do |search|
+      GoogleSiteSearch.query(url, SearchResult) do |search|
+        # I can do something with the search objects.
+        # possibly some custom analytics for our searchs?
+        search.url # we can access the object
+      end
     end
-      
+
 
 == Advanced Usage 
 
@@ -87,7 +94,7 @@ See
 
 == Pagination
 
-The google search api does the work of pagination for us, supplying the next and previous urls. The urls are relative paths and contain the search engine id parameter. Since this is a security concern I strip out the search engine id when I store them in the Search.next_result_url and Search.previous_result_url methods. This makes them safe to put in links on views and it is why you must supply the search engine id again on the paginate call; so full url can be rebuilt for the query call.
+The google search api does the work of pagination for us, supplying the next and previous urls. The urls are relative paths and contain the search engine id parameter. Since this is a security concern I strip out the search engine id when I store them in the Search.next_results_url and Search.previous_results_url methods. This makes them safe to put in links on views and it is why you must supply the search engine id again on the paginate call; so the full url can be rebuilt for the query call.
 
     search2 = GoogleSiteSearch.query(GoogleSiteSearch.paginate(search1.next_results_url, "00255077836266642015:u-scht7a-8i"))
 
