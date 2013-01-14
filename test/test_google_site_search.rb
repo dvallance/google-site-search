@@ -2,7 +2,6 @@ require_relative 'test_helper'
 
 describe GoogleSiteSearch do
 
-
   describe '.caching_key' do
     let :sample_url do 
       "http://domain?q=work&ei=dontshow&do=i"
@@ -34,12 +33,16 @@ describe GoogleSiteSearch do
     end
 
     it "raises an error if a search engine key is nil or blank" do
-      -> {GoogleSiteSearch.paginate(valid_url, "")}.must_raise StandardError 
-      -> {GoogleSiteSearch.paginate(valid_url, nil)}.must_raise StandardError 
+      -> {GoogleSiteSearch.paginate(valid_url, "")}.must_raise ArgumentError 
+      -> {GoogleSiteSearch.paginate(valid_url, nil)}.must_raise ArgumentError 
     end
 
     it 'completes a valid url for the relative path supplied' do
       GoogleSiteSearch.paginate("/some/path?q=search","my_key").must_equal "http://www.google.com/some/path?q=search&cx=my_key"
+    end
+
+    it 'handles host' do
+      GoogleSiteSearch.paginate("/test?q=search", "http://gsa-search").must_equal "http://gsa-search/test?q=search"
     end
 
   end
@@ -106,10 +109,8 @@ describe GoogleSiteSearch do
     end
 
     it "returns nil if not a Net::HTTPSuccess" do
-      mock = MiniTest::Mock.new.expect( :is_a?, false, [Net::HTTPSuccess])
-      Net::HTTP.stub(:get_response, mock) do
-       GoogleSiteSearch.request_xml("/doesnt_matter").must_be_nil
-      end
+      Net::HTTP.stubs(:get_response).returns(stub(:is_? => false, :body => "error"))
+      -> {GoogleSiteSearch.request_xml("/doesnt_matter")}.must_raise StandardError
     end
 
     it "doesn't catch exceptions if they happen" do
@@ -123,7 +124,7 @@ describe GoogleSiteSearch do
   describe ".query" do
     it "creates a Search object and calls query on it" do
       mock = MiniTest::Mock.new.expect(:query, mock)
-      Search.stub(:new, mock) do
+      GoogleSiteSearch::Search.stub(:new, mock) do
         GoogleSiteSearch.query("/doesnt_matter")
         mock.verify
       end
@@ -134,13 +135,13 @@ describe GoogleSiteSearch do
    
     describe "when there are always next results available" do
       before do
-        search = Search.new("fake_url",GoogleSiteSearch::Result)
+        search = GoogleSiteSearch::Search.new("fake_url",GoogleSiteSearch::Result)
         search.stubs(:next_results_url).returns("next_url")
-        Search.any_instance.stubs(:query).returns(search)
+        GoogleSiteSearch::Search.any_instance.stubs(:query).returns(search)
       end
 
       let :result do
-        GoogleSiteSearch.query_multiple(3, "dosent_matter", Result)
+        GoogleSiteSearch.query_multiple(3, "dosent_matter", GoogleSiteSearch::Result)
       end
 
       it "returns an array of query results" do
@@ -154,7 +155,7 @@ describe GoogleSiteSearch do
       describe "accepts and executes a block for each result" do
         let :block_result do
           block_result = []
-          GoogleSiteSearch.query_multiple(3, "dosent_matter", Result) do |search|
+          GoogleSiteSearch.query_multiple(3, "dosent_matter", GoogleSiteSearch::Result) do |search|
             block_result << search.next_results_url
           end
           block_result
@@ -170,13 +171,13 @@ describe GoogleSiteSearch do
     describe "when there are less results then asked for" do
 
       before do
-        search = Search.new("fake_url",GoogleSiteSearch::Result)
+        search = GoogleSiteSearch::Search.new("fake_url",GoogleSiteSearch::Result)
         search.stubs(:next_results_url).returns(nil)
-        Search.any_instance.stubs(:query).returns(search)
+        GoogleSiteSearch::Search.any_instance.stubs(:query).returns(search)
       end
 
       let :result do
-        GoogleSiteSearch.query_multiple(3, "dosent_matter", Result)
+        GoogleSiteSearch.query_multiple(3, "dosent_matter", GoogleSiteSearch::Result)
       end
 
       it "returns an array of query results" do

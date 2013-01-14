@@ -1,6 +1,6 @@
 require_relative 'test_helper'
 
-describe Search do
+describe GoogleSiteSearch::Search do
 
   let :xml do
     IO.read(File.join(File.dirname(__FILE__), "data", "utf8_results.xml"))
@@ -10,7 +10,7 @@ describe Search do
     
     let :search do
       GoogleSiteSearch.stub(:request_xml, xml) do
-        Search.new("/sample", Result).query 
+        GoogleSiteSearch::Search.new("/sample", GoogleSiteSearch::Result).query 
       end
     end
 
@@ -47,7 +47,7 @@ describe Search do
     end
     
     it "defaults to the Result class" do
-      search.result_class.must_equal Result
+      search.result_class.must_equal GoogleSiteSearch::Result
     end
 
     it "stores the original search query" do
