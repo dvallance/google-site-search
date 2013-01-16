@@ -81,7 +81,7 @@ module GoogleSiteSearch
         @previous_results_url = remove_search_engine_id(doc.find_first("RES/NB/PU").try(:content))
         @search_query = doc.find_first("Q").try(:content)
       rescue Exception => e
-        raise ParsingError, "#{e.message} URL:[#{@url}] XML:[#{@xml}]"
+        raise ParsingError, "#{e.message} Class:[#{e.class}] URL:[#{@url}] XML:[#{@xml}]"
       end
     end
 
@@ -90,7 +90,7 @@ module GoogleSiteSearch
       uri = URI.parse(url)
       params = Rack::Utils::parse_query(uri.query)
       params.delete("cx")
-      uri.query = params.map{|k,v| "#{k}=#{v}"}.sort.join("&")
+      uri.query = params.to_query
       uri.to_s
     end
   end
