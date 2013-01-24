@@ -31,7 +31,6 @@ module GoogleSiteSearch
 		# the url supplied.
     attr_reader :search_query
 
-
 		# ==== Attributes
 		#
 		# * +url+ - Expects a fully qualified url to Googles search API
@@ -42,6 +41,7 @@ module GoogleSiteSearch
       @url = url.to_s
       @results = Array.new
       @result_class = result_class
+      @synonyms = []
     end
 
     def next_results_url  
@@ -64,6 +64,10 @@ module GoogleSiteSearch
       @results || []
     end
 
+    def synonyms
+      [@synonyms].compact.flatten
+    end
+
     private
 
     def parse_xml
@@ -76,6 +80,10 @@ module GoogleSiteSearch
         spelling_node = doc.find_first("Spelling/Suggestion")
         @spelling = spelling_node.try(:content) 
         @spelling_q = spelling_node.try(:attributes).try(:[],:q)
+        nodes = doc.find("Synonyms/OneSynonym")
+        nodes.each do |synonym|
+          @synonyms << synonym.content 
+        end
         @estimated_results_total = doc.find_first("RES/M").try(:content)
         @next_results_url = remove_search_engine_id(doc.find_first("RES/NB/NU").try(:content))
         @previous_results_url = remove_search_engine_id(doc.find_first("RES/NB/PU").try(:content))
