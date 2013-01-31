@@ -15,7 +15,7 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
   gem.version       = GoogleSiteSearch::VERSION
   gem.add_dependency("activesupport")
-  gem.add_dependency("libxml-ruby")
+  gem.add_dependency("libxml-ruby", ">=2.4")
   gem.add_dependency("rsmaz")
   gem.add_dependency("rack")
 end
