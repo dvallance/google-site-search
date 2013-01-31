@@ -79,8 +79,10 @@ module GoogleSiteSearch
       response = Net::HTTP.get_response(URI.parse(url.to_s))
       if response.is_a?(Net::HTTPSuccess)
         response.body 
+      elsif response.is_a?(Net::HTTPNotFound)
+        raise Error404
       else
-        raise StandardError, "request_xml error: #{response.body}"
+        raise StandardError, "request_xml error: #{response.inspect}"
       end
     end
 

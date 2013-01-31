@@ -1,6 +1,7 @@
 module GoogleSiteSearch
 
   class ParsingError < StandardError; end;
+  class Error404 < StandardError; end;
 
 	# Search is responsible for parsing the returned xml from
 	# google's API.

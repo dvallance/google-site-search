@@ -1,3 +1,3 @@
 module GoogleSiteSearch
-	VERSION = "0.0.9"
+	VERSION = "0.1.9"
 end
