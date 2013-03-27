@@ -30,12 +30,12 @@ describe GoogleSiteSearch do
     
     it "raises an error if the url has no parameters and is therefore invalid" do
       url = "http://www.noparameters.com/"
-      -> {GoogleSiteSearch.paginate(url, "my_key")}.must_raise StandardError
+      -> {GoogleSiteSearch.paginate(url, "my_key")}.must_raise GoogleSiteSearch::Error
     end
 
     it "raises an error if a search engine key is nil or blank" do
-      -> {GoogleSiteSearch.paginate(valid_url, "")}.must_raise StandardError 
-      -> {GoogleSiteSearch.paginate(valid_url, nil)}.must_raise StandardError 
+      -> {GoogleSiteSearch.paginate(valid_url, "")}.must_raise GoogleSiteSearch::Error 
+      -> {GoogleSiteSearch.paginate(valid_url, nil)}.must_raise GoogleSiteSearch::Error 
     end
 
     it 'completes a valid url for the relative path supplied' do
@@ -113,9 +113,9 @@ describe GoogleSiteSearch do
     end
 
     it "doesn't catch exceptions if they happen" do
-      mock = -> a {raise StandardError}
+      mock = -> a {raise StandardError::Error}
       Net::HTTP.stub(:get_response, mock) do
-       -> {GoogleSiteSearch.request_xml("/doesnt_matter")}.must_raise StandardError 
+       -> {GoogleSiteSearch.request_xml("/doesnt_matter")}.must_raise GoogleSiteSearch::Error 
       end
     end
   end

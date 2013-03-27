@@ -23,6 +23,8 @@ module GoogleSiteSearch
     :client => "google-csbe",
     :output => "xml_no_dtd",
   }
+  
+  class Error < StandardError ; end
 
   class << self
 
@@ -39,9 +41,9 @@ module GoogleSiteSearch
 
     # Expects the URL returned by Search#next_results_url or Search#previous_results_url.
     def paginate url, search_engine_id
-      raise StandardError, "search_engine_id required" if search_engine_id.blank? 
+      raise GoogleSiteSearch::Error, "search_engine_id required" if search_engine_id.blank? 
       uri = URI.parse(url.to_s)
-      raise StandardError, "url seems to be invalid, parameters expected" if uri.query.blank?
+      raise GoogleSiteSearch::Error, "url seems to be invalid, parameters expected" if uri.query.blank?
       if uri.relative?
         uri.host = "www.google.com"
         uri.scheme = "http"
