@@ -85,6 +85,10 @@ describe GoogleSiteSearch do
     it 'strips whitespace' do
       GoogleSiteSearch.separate_search_term_from_filters(" microsoft  more:p:my-value  ").must_equal ["microsoft", "more:p:my-value"]
     end
+    
+    it 'works with labeled filters' do
+      GoogleSiteSearch.separate_search_term_from_filters("microsoft  more:software").must_equal ["microsoft", "more:software"]
+    end
 
     it 'handles nil' do
       GoogleSiteSearch.separate_search_term_from_filters(nil).must_equal [nil, nil]
