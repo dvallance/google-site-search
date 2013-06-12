@@ -86,12 +86,15 @@ module GoogleSiteSearch
       uri.relative? ? path : [uri.path,uri.query].compact.join("?")
     end
 
-		# Google's api will give back a full query which has the filter options on it. I like to deal with them separately so this method breaks them up.
-		def separate_search_term_from_filters(string)
-			match = /\smore(?:(?:(?::p:|:pagemap:).*\z)|(?::\w+\z))/.match(string)
-			return [string, nil] if match.nil?
-			return [match.pre_match.strip, match[0].strip] 
-		end
+    # Google's api will give back a full query which has the filter options on it. I like to deal with them separately so this method breaks them up.
+    def separate_search_term_from_filters(string)
+      if match = string.to_s.match(/\A(.*?)(more:.+)|.*\z/)
+        search_string, filters = match[1] || match[0], match[2]
+        [search_string.to_s.strip, filters.to_s.strip]
+      else
+        ['', '']
+      end
+    end
 
   end
 end
