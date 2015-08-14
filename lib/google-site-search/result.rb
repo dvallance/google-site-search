@@ -11,6 +11,7 @@ module GoogleSiteSearch
 		#
 		# * +node+ - LibXML::XML::Node.
 		def initialize(node)
+			@description = nil
 			@title = node.find_first("T").try(:content)
 
 			# Fully qualified URL to the result.
