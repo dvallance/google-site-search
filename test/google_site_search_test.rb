@@ -78,20 +78,32 @@ describe GoogleSiteSearch do
       GoogleSiteSearch.separate_search_term_from_filters("microsoft more:pagemap:mytype").must_equal ["microsoft", "more:pagemap:mytype"]
     end
 
-    it 'not fooled by an improper filter' do
-      GoogleSiteSearch.separate_search_term_from_filters("microsoft more:x:wrong").must_equal ["microsoft more:x:wrong", nil]
-    end
-
     it 'strips whitespace' do
       GoogleSiteSearch.separate_search_term_from_filters(" microsoft  more:p:my-value  ").must_equal ["microsoft", "more:p:my-value"]
     end
+    
+    it 'works with labeled filters' do
+      GoogleSiteSearch.separate_search_term_from_filters("microsoft  more:software").must_equal ["microsoft", "more:software"]
+    end
+    
+    it 'works with multiple implicit AND filters' do
+      GoogleSiteSearch.separate_search_term_from_filters("microsoft  more:software more:hardware").must_equal ["microsoft", "more:software more:hardware"]
+    end
+    
+    it 'works with multiple explicit AND filters' do
+      GoogleSiteSearch.separate_search_term_from_filters("microsoft  more:software AND more:hardware").must_equal ["microsoft", "more:software AND more:hardware"]
+    end
+    
+    it 'works with multiple explicit OR filters' do
+      GoogleSiteSearch.separate_search_term_from_filters("microsoft  more:software OR more:hardware").must_equal ["microsoft", "more:software OR more:hardware"]
+    end
 
     it 'handles nil' do
-      GoogleSiteSearch.separate_search_term_from_filters(nil).must_equal [nil, nil]
+      GoogleSiteSearch.separate_search_term_from_filters(nil).must_equal ["", ""]
     end
 
     it 'handles ""' do
-      GoogleSiteSearch.separate_search_term_from_filters("").must_equal ["", nil]
+      GoogleSiteSearch.separate_search_term_from_filters("").must_equal ["", ""]
     end
   end
 
