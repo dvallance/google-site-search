@@ -20,7 +20,7 @@ module GoogleSiteSearch
 
       #check for custom search description when not regular search result
       if @description.empty?
-        @description = node.find_first("//BLOCK /T").try(:content)
+        @description = node.find_first(".//BLOCK /T").try(:content)
       end
 		end
 	end
